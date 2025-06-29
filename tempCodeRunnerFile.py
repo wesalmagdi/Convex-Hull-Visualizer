@@ -1,0 +1,1 @@
+np.arctan2(p[1] - start[1], p[0] - start[0])
