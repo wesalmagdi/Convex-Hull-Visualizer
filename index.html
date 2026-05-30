@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Convex Hull Algorithm Visualizer</title>
+<link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<div id="app">
+  <nav id="top-bar">
+    <h1>Convex Hull Visualizer</h1>
+    <div id="nav-controls">
+      <span id="point-count">Points: 0</span>
+      <span id="algo-name"></span>
+    </div>
+  </nav>
+
+  <div id="menu-screen" class="screen active">
+    <h2>Select an Algorithm</h2>
+    <p>Visualize how different algorithms compute the convex hull of a set of points.</p>
+    <div id="menu-buttons">
+      <button class="menu-btn" data-algo="graham" style="--btn-color: #4CAF50">Graham's Scan</button>
+      <button class="menu-btn" data-algo="giftwrap" style="--btn-color: #FFC107">Gift Wrapping</button>
+      <button class="menu-btn" data-algo="andrews" style="--btn-color: #9C27B0">Andrew's Monotone</button>
+    </div>
+  </div>
+
+  <div id="viz-screen" class="screen">
+    <canvas id="canvas"></canvas>
+    <div id="controls">
+      <div class="control-group">
+        <input type="text" id="point-input" placeholder="x y (e.g. 3 5)" spellcheck="false">
+        <button id="btn-add" class="btn green">Add Point</button>
+        <button id="btn-remove" class="btn red">Remove Last</button>
+        <button id="btn-reset" class="btn orange">Reset</button>
+      </div>
+      <div class="control-group">
+        <button id="btn-start" class="btn blue">Start</button>
+        <button id="btn-stop" class="btn red">Stop</button>
+        <button id="btn-back" class="btn purple">Back</button>
+      </div>
+    </div>
+    <div id="info-panel">
+      <div id="instructions">
+        <strong>Instructions:</strong>
+        Enter coordinates as "x y" and click Add Point (or press Enter). Add at least 3 points, then click Start.
+      </div>
+      <div id="status"></div>
+    </div>
+  </div>
+</div>
+
+<script src="/static/js/algorithms.js"></script>
+<script src="/static/js/visualizer.js"></script>
+<script src="/static/js/app.js"></script>
+</body>
+</html>
