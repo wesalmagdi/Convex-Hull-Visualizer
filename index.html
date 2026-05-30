@@ -32,21 +32,31 @@
       <div class="control-group">
         <input type="text" id="point-input" placeholder="x y (e.g. 3 5)" spellcheck="false">
         <button id="btn-add" class="btn green">Add Point</button>
+      </div>
+      <div class="control-group">
+        <input type="number" id="rand-count" min="3" max="100" value="10">
+        <button id="btn-random" class="btn purple">Random</button>
+      </div>
+      <div class="control-group">
         <button id="btn-remove" class="btn red">Remove Last</button>
         <button id="btn-reset" class="btn orange">Reset</button>
       </div>
       <div class="control-group">
         <button id="btn-start" class="btn blue">Start</button>
         <button id="btn-stop" class="btn red">Stop</button>
-        <button id="btn-back" class="btn purple">Back</button>
+        <button id="btn-back" class="btn gray">Back</button>
       </div>
     </div>
     <div id="info-panel">
       <div id="instructions">
         <strong>Instructions:</strong>
-        Enter coordinates as "x y" and click Add Point (or press Enter). Add at least 3 points, then click Start.
+        Enter "x y" and Add Point, click canvas to add, or use Random. Need 3+ points, then Start.
       </div>
-      <div id="status"></div>
+      <div id="controls-right">
+        <span id="status"></span>
+        <button id="btn-sound" class="icon-btn" title="Toggle sound effects">🔊</button>
+        <button id="btn-music" class="icon-btn" title="Toggle background music">🎵</button>
+      </div>
     </div>
   </div>
 </div>

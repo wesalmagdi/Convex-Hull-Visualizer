@@ -1,7 +1,57 @@
+class SoundManager {
+  constructor() {
+    this.enabled = true;
+    this.musicEnabled = false;
+    this.sounds = {};
+    this.music = null;
+    const files = {
+      click: '/assets/bonk%20doge.mp3',
+      reset: '/assets/spongebob-fail.mp3',
+      pew: '/assets/pew.mp3',
+      music: '/assets/background_music.mp3',
+    };
+    const on = (name) => {
+      const a = new Audio(files[name]);
+      a.load();
+      return a;
+    };
+    this.sounds.click = on('click');
+    this.sounds.reset = on('reset');
+    this.sounds.pew = on('pew');
+    this.music = on('music');
+    this.music.loop = true;
+  }
+
+  play(name) {
+    if (!this.enabled) return;
+    const s = this.sounds[name];
+    if (!s) return;
+    s.currentTime = 0;
+    s.play().catch(() => {});
+  }
+
+  toggleSound() {
+    this.enabled = !this.enabled;
+    return this.enabled;
+  }
+
+  toggleMusic() {
+    this.musicEnabled = !this.musicEnabled;
+    if (this.musicEnabled) {
+      this.music.play().catch(() => { this.musicEnabled = false; });
+    } else {
+      this.music.pause();
+      this.music.currentTime = 0;
+    }
+    return this.musicEnabled;
+  }
+}
+
 class App {
   constructor() {
     this.canvas = document.getElementById('canvas');
     this.viz = new Visualizer(this.canvas);
+    this.sound = new SoundManager();
     this.points = [];
     this.algorithm = null;
     this.steps = [];
@@ -14,20 +64,33 @@ class App {
 
   bindUI() {
     document.querySelectorAll('.menu-btn').forEach(btn => {
-      btn.addEventListener('click', () => this.selectAlgorithm(btn.dataset.algo));
+      btn.addEventListener('click', () => {
+        this.sound.play('click');
+        this.selectAlgorithm(btn.dataset.algo);
+      });
     });
-    document.getElementById('btn-add').addEventListener('click', () => this.addPoint());
+    document.getElementById('btn-add').addEventListener('click', () => { this.sound.play('click'); this.addPoint(); });
     document.getElementById('point-input').addEventListener('keydown', e => {
-      if (e.key === 'Enter') this.addPoint();
+      if (e.key === 'Enter') { this.sound.play('click'); this.addPoint(); }
     });
-    document.getElementById('btn-remove').addEventListener('click', () => this.removeLast());
-    document.getElementById('btn-reset').addEventListener('click', () => this.reset());
-    document.getElementById('btn-start').addEventListener('click', () => this.start());
-    document.getElementById('btn-stop').addEventListener('click', () => this.stop());
-    document.getElementById('btn-back').addEventListener('click', () => this.goBack());
+    document.getElementById('btn-random').addEventListener('click', () => { this.sound.play('click'); this.randomPoints(); });
+    document.getElementById('btn-remove').addEventListener('click', () => { this.sound.play('click'); this.removeLast(); });
+    document.getElementById('btn-reset').addEventListener('click', () => { this.sound.play('reset'); this.reset(); });
+    document.getElementById('btn-start').addEventListener('click', () => { this.sound.play('click'); this.start(); });
+    document.getElementById('btn-stop').addEventListener('click', () => { this.sound.play('click'); this.stop(); });
+    document.getElementById('btn-back').addEventListener('click', () => { this.sound.play('click'); this.goBack(); });
+    document.getElementById('btn-sound').addEventListener('click', () => {
+      const on = this.sound.toggleSound();
+      document.getElementById('btn-sound').classList.toggle('muted', !on);
+    });
+    document.getElementById('btn-music').addEventListener('click', () => {
+      const on = this.sound.toggleMusic();
+      document.getElementById('btn-music').classList.toggle('muted', !on);
+    });
     this.canvas.addEventListener('click', e => {
       const p = this.viz.getCanvasPoint(e, this.points);
       if (isFinite(p[0]) && isFinite(p[1])) {
+        this.sound.play('click');
         this.points.push(p);
         this.updateUI();
       }
@@ -67,6 +130,20 @@ class App {
     }
   }
 
+  randomPoints() {
+    const count = parseInt(document.getElementById('rand-count').value) || 10;
+    const n = Math.max(3, Math.min(100, count));
+    this.points = [];
+    for (let i = 0; i < n; i++) {
+      this.points.push([Math.random() * 18 - 9, Math.random() * 18 - 9]);
+    }
+    this.steps = [];
+    this.stepIndex = 0;
+    this.hullResult = null;
+    this.running = false;
+    this.updateUI();
+  }
+
   removeLast() {
     this.points.pop();
     this.steps = [];
@@ -101,6 +178,8 @@ class App {
     this.steps = result.steps;
     this.hullResult = result.hull;
     this.setStatus('Running...', '#4CAF50');
+    this.sound.musicEnabled = false;
+    this.sound.toggleMusic();
     this.animate();
   }
 
@@ -109,6 +188,7 @@ class App {
       if (this.stepIndex >= this.steps.length && this.hullResult) {
         this.renderFinal();
         this.setStatus('Complete!', '#4CAF50');
+        this.sound.play('pew');
       }
       this.running = false;
       return;
@@ -126,22 +206,20 @@ class App {
       points: this.points,
       hullPoints: hull,
       currentPoint: step.current || null,
-      highlightPoints: step.lower || step.upper ? [...(step.lower || []), ...(step.upper || [])] : null
+      highlightPoints: step.lower || step.upper ? [...(step.lower || []), ...(step.upper || [])] : null,
     });
   }
 
   renderFinal() {
     const hull = this.hullResult || [];
-    let state = { points: this.points, hullPoints: hull, currentPoint: null, highlightPoints: null };
-    if (this.algorithm === 'andrews') {
-      state.highlightPoints = null;
-    }
-    this.viz.render(state);
+    this.viz.render({ points: this.points, hullPoints: hull, currentPoint: null, highlightPoints: null });
   }
 
   stop() {
     this.running = false;
     if (this.animId) { clearTimeout(this.animId); this.animId = null; }
+    this.sound.musicEnabled = true;
+    this.sound.toggleMusic();
     this.setStatus('Stopped', '#FF9800');
   }
 
@@ -158,12 +236,14 @@ class App {
   updateUI() {
     document.getElementById('point-count').textContent = `Points: ${this.points.length}`;
     if (this.points.length > 0) {
-      this.viz.render({ points: this.points, hullPoints: null, currentPoint: null });
+      this.viz.render({ points: this.points, hullPoints: null, currentPoint: null, highlightPoints: null });
     } else {
       this.viz.clear();
     }
     if (this.points.length < 3) {
-      this.setStatus(`Add ${3 - this.points.length} more point${this.points.length === 2 ? '' : 's'}`, '#888');
+      this.setStatus(`Need ${3 - this.points.length} more point${this.points.length === 2 ? '' : 's'}`, '#888');
+    } else {
+      this.setStatus('Ready — click Start', '#4CAF50');
     }
   }
 
