@@ -2,40 +2,55 @@ class SoundManager {
   constructor() {
     this.sfxOn = true;
     this.musicOn = false;
-    this.sounds = {};
-    this.music = null;
-    this._load('click', '/assets/bonk%20doge.mp3');
-    this._load('reset', '/assets/spongebob-fail.mp3');
-    this._load('pew', '/assets/pew.mp3');
-    const m = new Audio('/assets/background_music.mp3');
+    this.musicPlaying = false;
+    this.musicEl = null;
+    this._initMusic();
+  }
+
+  _initMusic() {
+    const m = new Audio('/assets/na%20na%20na.mp3');
     m.loop = true;
-    m.volume = 0.4;
-    this.music = m;
+    m.volume = 0.3;
+    m.preload = 'auto';
+    m.addEventListener('error', (e) => {
+      console.warn('Music load error, trying fallback:', e);
+      const m2 = new Audio('/assets/background_music.mp3');
+      m2.loop = true;
+      m2.volume = 0.3;
+      this.musicEl = m2;
+    });
+    this.musicEl = m;
   }
 
-  _load(name, path) {
-    const a = new Audio(path);
-    a.volume = 0.6;
-    this.sounds[name] = a;
-  }
-
-  play(name) {
+  sfx(name) {
     if (!this.sfxOn) return;
-    const s = this.sounds[name];
-    if (!s) return;
-    s.currentTime = 0;
-    s.play().catch(() => {});
+    const paths = {
+      click: '/assets/bonk%20doge.mp3',
+      reset: '/assets/spongebob-fail.mp3',
+      pew: '/assets/pew.mp3',
+    };
+    const path = paths[name];
+    if (!path) return;
+    try {
+      const a = new Audio(path);
+      a.volume = 0.5;
+      a.play().catch(() => {});
+    } catch {}
   }
 
-  musicPlay() {
-    if (!this.musicOn) return;
-    this.music.currentTime = 0;
-    this.music.play().catch(() => {});
+  musicStart() {
+    if (!this.musicOn || !this.musicEl) return;
+    this.musicEl.currentTime = 0;
+    this.musicEl.play().then(() => {
+      this.musicPlaying = true;
+    }).catch(() => {});
   }
 
   musicStop() {
-    this.music.pause();
-    this.music.currentTime = 0;
+    if (!this.musicEl) return;
+    this.musicEl.pause();
+    this.musicEl.currentTime = 0;
+    this.musicPlaying = false;
   }
 
   toggleSfx() {
@@ -46,7 +61,9 @@ class SoundManager {
   toggleMusic() {
     this.musicOn = !this.musicOn;
     if (this.musicOn) {
-      this.music.play().catch(() => { this.musicOn = false; });
+      this.musicEl.play().then(() => {
+        this.musicPlaying = true;
+      }).catch(() => { this.musicOn = false; });
     } else {
       this.musicStop();
     }
@@ -72,33 +89,33 @@ class App {
   bindUI() {
     document.querySelectorAll('.menu-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        this.sound.play('click');
+        this.sound.sfx('click');
         this.selectAlgorithm(btn.dataset.algo);
       });
     });
     document.getElementById('btn-add').addEventListener('click', () => {
-      this.sound.play('click'); this.addPoint();
+      this.sound.sfx('click'); this.addPoint();
     });
     document.getElementById('point-input').addEventListener('keydown', e => {
-      if (e.key === 'Enter') { this.sound.play('click'); this.addPoint(); }
+      if (e.key === 'Enter') { this.sound.sfx('click'); this.addPoint(); }
     });
     document.getElementById('btn-random').addEventListener('click', () => {
-      this.sound.play('click'); this.randomPoints();
+      this.sound.sfx('click'); this.randomPoints();
     });
     document.getElementById('btn-remove').addEventListener('click', () => {
-      this.sound.play('click'); this.removeLast();
+      this.sound.sfx('click'); this.removeLast();
     });
     document.getElementById('btn-reset').addEventListener('click', () => {
-      this.sound.play('reset'); this.reset();
+      this.sound.sfx('reset'); this.reset();
     });
     document.getElementById('btn-start').addEventListener('click', () => {
-      this.sound.play('click'); this.start();
+      this.sound.sfx('click'); this.start();
     });
     document.getElementById('btn-stop').addEventListener('click', () => {
-      this.sound.play('click'); this.stop();
+      this.sound.sfx('click'); this.stop();
     });
     document.getElementById('btn-back').addEventListener('click', () => {
-      this.sound.play('click'); this.goBack();
+      this.sound.sfx('click'); this.goBack();
     });
     document.getElementById('btn-sound').addEventListener('click', () => {
       const on = this.sound.toggleSfx();
@@ -111,7 +128,7 @@ class App {
     this.canvas.addEventListener('click', e => {
       const p = this.viz.getCanvasPoint(e, this.points);
       if (isFinite(p[0]) && isFinite(p[1])) {
-        this.sound.play('click');
+        this.sound.sfx('click');
         this.points.push(p);
         this.updateUI();
       }
@@ -156,7 +173,7 @@ class App {
     const n = Math.max(3, Math.min(100, count));
     this.points = [];
     for (let i = 0; i < n; i++) {
-      this.points.push([Math.random() * 18 - 9, Math.random() * 18 - 9]);
+      this.points.push([+(Math.random() * 18 - 9).toFixed(2), +(Math.random() * 18 - 9).toFixed(2)]);
     }
     this.steps = [];
     this.stepIndex = 0;
@@ -167,25 +184,21 @@ class App {
 
   removeLast() {
     this.points.pop();
-    this.steps = [];
-    this.stepIndex = 0;
-    this.hullResult = null;
-    this.running = false;
+    this.steps = []; this.stepIndex = 0;
+    this.hullResult = null; this.running = false;
     this.updateUI();
   }
 
   reset() {
     this.points = [];
-    this.steps = [];
-    this.stepIndex = 0;
-    this.hullResult = null;
-    this.running = false;
+    this.steps = []; this.stepIndex = 0;
+    this.hullResult = null; this.running = false;
     this.updateUI();
   }
 
   start() {
     if (this.points.length < 3) {
-      this.setStatus('Need at least 3 points', '#F44336');
+      this.setStatus('Need at least 3 points', '#e74c3c');
       return;
     }
     this.running = true;
@@ -195,11 +208,11 @@ class App {
     let result;
     if (algo === 'graham') result = ConvexHullAlgorithms.grahamScan(this.points);
     else if (algo === 'giftwrap') result = ConvexHullAlgorithms.giftWrapping(this.points);
-    else if (algo === 'andrews') result = ConvexHullAlgorithms.andrewsMonotone(this.points);
+    else result = ConvexHullAlgorithms.andrewsMonotone(this.points);
     this.steps = result.steps;
     this.hullResult = result.hull;
-    this.setStatus('Running...', '#4CAF50');
-    this.sound.musicPlay();
+    this.setStatus('Running...', '#6c63ff');
+    this.sound.musicStart();
     this.animate();
   }
 
@@ -207,8 +220,8 @@ class App {
     if (!this.running || this.stepIndex >= this.steps.length) {
       if (this.stepIndex >= this.steps.length && this.hullResult) {
         this.renderFinal();
-        this.setStatus('Complete!', '#4CAF50');
-        this.sound.play('pew');
+        this.setStatus('Complete!', '#2ecc71');
+        this.sound.sfx('pew');
         this.sound.musicStop();
       }
       this.running = false;
@@ -217,7 +230,7 @@ class App {
     this.renderStep(this.steps[this.stepIndex]);
     this.stepIndex++;
     if (this.running) {
-      this.animId = setTimeout(() => this.animate(), 400);
+      this.animId = setTimeout(() => this.animate(), 350);
     }
   }
 
@@ -232,23 +245,25 @@ class App {
   }
 
   renderFinal() {
-    const hull = this.hullResult || [];
-    this.viz.render({ points: this.points, hullPoints: hull, currentPoint: null, highlightPoints: null });
+    this.viz.render({
+      points: this.points,
+      hullPoints: this.hullResult || [],
+      currentPoint: null,
+      highlightPoints: null,
+    });
   }
 
   stop() {
     this.running = false;
     if (this.animId) { clearTimeout(this.animId); this.animId = null; }
     this.sound.musicStop();
-    this.setStatus('Stopped', '#FF9800');
+    this.setStatus('Stopped', '#f39c12');
   }
 
   goBack() {
     this.stop();
     this.running = false;
-    this.steps = [];
-    this.stepIndex = 0;
-    this.hullResult = null;
+    this.steps = []; this.stepIndex = 0; this.hullResult = null;
     document.getElementById('algo-name').textContent = '';
     this.showScreen('menu-screen');
   }
@@ -261,13 +276,13 @@ class App {
       this.viz.clear();
     }
     if (this.points.length < 3) {
-      this.setStatus(`Need ${3 - this.points.length} more point${this.points.length === 2 ? '' : 's'}`, '#888');
+      this.setStatus(`Need ${3 - this.points.length} more`, '#888');
     } else {
-      this.setStatus('Ready — press Start', '#4CAF50');
+      this.setStatus('Ready', '#2ecc71');
     }
   }
 
-  setStatus(msg, color = '#888') {
+  setStatus(msg, color) {
     const el = document.getElementById('status');
     el.textContent = msg;
     el.style.color = color;
