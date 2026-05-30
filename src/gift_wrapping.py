@@ -25,7 +25,7 @@ class GiftWrappingVisualizer(BaseConvexHullVisualizer):
 
         self.start_point = min(self.points, key=lambda p: (p[1], p[0]))
         self.point_on_hull = self.start_point
-        self.hull_points = []
+        self.hull_points = [self.start_point]
         self.endpoint = None
         self.current_point = None
 
@@ -54,7 +54,7 @@ class GiftWrappingVisualizer(BaseConvexHullVisualizer):
                 continue
 
             o = self.orientation(self.point_on_hull, next_point, p)
-            if o == 2:
+            if o == 1:
                 next_point = p
             elif o == 0:
                 dist_next = np.linalg.norm(np.array(next_point) - np.array(self.point_on_hull))
@@ -123,7 +123,7 @@ class GiftWrappingVisualizer(BaseConvexHullVisualizer):
             self.ax.set_xlim(-10, 10)
             self.ax.set_ylim(-10, 10)
 
-        if len(self.points) >= 3:
+        if len(self.points) >= 3 and not isinstance(self.hull_points, np.ndarray):
             self.step_algorithm()
 
         plt.draw()
