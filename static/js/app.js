@@ -27,8 +27,10 @@ class App {
     document.getElementById('btn-back').addEventListener('click', () => this.goBack());
     this.canvas.addEventListener('click', e => {
       const p = this.viz.getCanvasPoint(e, this.points);
-      this.points.push(p);
-      this.updateUI();
+      if (isFinite(p[0]) && isFinite(p[1])) {
+        this.points.push(p);
+        this.updateUI();
+      }
     });
   }
 
@@ -46,7 +48,10 @@ class App {
     const names = { graham: "Graham's Scan", giftwrap: 'Gift Wrapping', andrews: "Andrew's Monotone" };
     document.getElementById('algo-name').textContent = names[algo];
     this.showScreen('viz-screen');
-    this.updateUI();
+    requestAnimationFrame(() => {
+      this.viz.resize();
+      this.updateUI();
+    });
   }
 
   addPoint() {

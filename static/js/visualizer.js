@@ -7,10 +7,13 @@ class Visualizer {
   }
 
   resize() {
+    this.padding = 50;
+    const display = getComputedStyle(this.canvas.parentElement).display;
+    if (display === 'none') return;
     const rect = this.canvas.parentElement.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return;
     this.canvas.width = this.canvas.clientWidth || rect.width;
     this.canvas.height = this.canvas.clientHeight || rect.height;
-    this.padding = 50;
   }
 
   clear() { this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height); }
@@ -67,6 +70,7 @@ class Visualizer {
   }
 
   render(state) {
+    if (this.canvas.width === 0 || this.canvas.height === 0) return;
     this.clear();
     const tr = this.getTransform(state.points);
     this.ctx.fillStyle = '#2D2D2D';
