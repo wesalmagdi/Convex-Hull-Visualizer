@@ -137,17 +137,43 @@ class Visualizer {
 
   _drawStepDesc(text) {
     const ctx = this.ctx;
-    const w = this.canvas.width, h = this.canvas.height;
-    const barH = 52, pad = 16;
+    const w = this.canvas.width;
+    const pad = 24;
+    const labelW = Math.min(w - pad * 2, 560);
+    const labelH = 44;
+    const cx = w / 2;
 
-    ctx.fillStyle = 'rgba(0,0,0,0.65)';
-    ctx.fillRect(0, h - barH, w, barH);
+    ctx.save();
+    // pill background
+    const x = cx - labelW / 2, y = 18;
+    ctx.shadowColor = 'rgba(255,64,129,0.2)';
+    ctx.shadowBlur = 20;
+    ctx.fillStyle = 'rgba(0,0,0,0.7)';
+    ctx.beginPath();
+    ctx.roundRect(x, y, labelW, labelH, 22);
+    ctx.fill();
+    ctx.shadowBlur = 0;
 
+    // hairline border
+    ctx.strokeStyle = 'rgba(255,64,129,0.2)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.roundRect(x, y, labelW, labelH, 22);
+    ctx.stroke();
+
+    // current-step dot
+    ctx.fillStyle = '#ff4081';
+    ctx.beginPath();
+    ctx.arc(x + 18, y + labelH / 2, 4, 0, Math.PI * 2);
+    ctx.fill();
+
+    // text
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.font = '13px Inter, system-ui, sans-serif';
-    ctx.fillStyle = 'rgba(255,255,255,0.85)';
-    ctx.fillText(text, w / 2, h - barH / 2);
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    ctx.fillText(text, cx, y + labelH / 2);
+    ctx.restore();
   }
 
   _drawOverlay(o) {
