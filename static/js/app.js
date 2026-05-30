@@ -49,29 +49,39 @@ class SoundManager {
   }
 }
 
-/* ─── Preset Generators ─── */
+/* ─── Preset Generators (all use radius ≈ 6–7 for consistency) ─── */
 function generateShape(shape, n) {
   n = Math.max(3, Math.min(200, n || 10));
+  const R = 6.5;
   const pts = [];
   switch (shape) {
-    case 'triangle':
-      return [[-5,-4],[5,-4],[0,6]];
-    case 'square':
-      return [[-5,-5],[5,-5],[5,5],[-5,5]];
+    case 'triangle': {
+      for (let i = 0; i < 3; i++) {
+        const a = (i / 3) * Math.PI * 2 - Math.PI / 2;
+        pts.push([Math.cos(a) * R, Math.sin(a) * R]);
+      }
+      return pts;
+    }
+    case 'square': {
+      for (let i = 0; i < 4; i++) {
+        const a = (i / 4) * Math.PI * 2 + Math.PI / 4;
+        pts.push([Math.cos(a) * R, Math.sin(a) * R]);
+      }
+      return pts;
+    }
     case 'polygon': {
       for (let i = 0; i < n; i++) {
         const a = (i / n) * Math.PI * 2 - Math.PI / 2;
-        pts.push([Math.cos(a) * 6, Math.sin(a) * 6]);
+        pts.push([Math.cos(a) * R, Math.sin(a) * R]);
       }
       return pts;
     }
     case 'star': {
-      const outer = 6, inner = 2.5;
-      const points2 = n * 2;
-      for (let i = 0; i < points2; i++) {
-        const a = (i / points2) * Math.PI * 2 - Math.PI / 2;
-        const r = i % 2 === 0 ? outer : inner;
-        pts.push([Math.cos(a) * r, Math.sin(a) * r]);
+      const outer = R, inner = R * 0.4;
+      const total = n % 2 === 0 ? n : n + 1;
+      for (let i = 0; i < total; i++) {
+        const a = (i / total) * Math.PI * 2 - Math.PI / 2;
+        pts.push([Math.cos(a) * (i % 2 === 0 ? outer : inner), Math.sin(a) * (i % 2 === 0 ? outer : inner)]);
       }
       return pts;
     }
@@ -79,10 +89,10 @@ function generateShape(shape, n) {
       const layers = Math.max(2, Math.min(8, Math.floor(n / 5)));
       const perLayer = Math.floor(n / layers);
       for (let l = 0; l < layers; l++) {
-        const r = 2 + l * (5 / layers);
-        const count = l === layers - 1 ? n - pts.length : perLayer;
-        for (let i = 0; i < count; i++) {
-          const a = (i / count) * Math.PI * 2 + l * 0.3;
+        const r = R * (0.2 + 0.8 * ((l + 1) / layers));
+        const cnt = l === layers - 1 ? n - pts.length : perLayer;
+        for (let i = 0; i < cnt; i++) {
+          const a = (i / cnt) * Math.PI * 2 + l * 0.4;
           pts.push([Math.cos(a) * r, Math.sin(a) * r]);
         }
       }
@@ -92,7 +102,7 @@ function generateShape(shape, n) {
       for (let i = 0; i < n; i++) {
         const t = i / n;
         const a = t * Math.PI * 6;
-        const r = t * 7;
+        const r = t * R;
         pts.push([Math.cos(a) * r, Math.sin(a) * r]);
       }
       return pts;
