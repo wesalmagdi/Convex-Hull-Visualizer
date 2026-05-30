@@ -12,13 +12,6 @@ class SoundManager {
     m.loop = true;
     m.volume = 0.3;
     m.preload = 'auto';
-    m.addEventListener('error', (e) => {
-      console.warn('Music load error, trying fallback:', e);
-      const m2 = new Audio('/assets/background_music.mp3');
-      m2.loop = true;
-      m2.volume = 0.3;
-      this.musicEl = m2;
-    });
     this.musicEl = m;
   }
 
@@ -26,8 +19,8 @@ class SoundManager {
     if (!this.sfxOn) return;
     const paths = {
       click: '/assets/bonk%20doge.mp3',
+      pew: '/assets/bonk%20doge.mp3',
       reset: '/assets/spongebob-fail.mp3',
-      pew: '/assets/pew.mp3',
     };
     const path = paths[name];
     if (!path) return;
