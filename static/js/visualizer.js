@@ -130,7 +130,24 @@ class Visualizer {
       for (const p of state.highlightPoints) this.drawPoint(p, tr, '#FF9800', 8);
     }
 
+    if (state.stepDesc) this._drawStepDesc(state.stepDesc);
+
     if (state.overlay) this._drawOverlay(state.overlay);
+  }
+
+  _drawStepDesc(text) {
+    const ctx = this.ctx;
+    const w = this.canvas.width, h = this.canvas.height;
+    const barH = 52, pad = 16;
+
+    ctx.fillStyle = 'rgba(0,0,0,0.65)';
+    ctx.fillRect(0, h - barH, w, barH);
+
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = '13px Inter, system-ui, sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    ctx.fillText(text, w / 2, h - barH / 2);
   }
 
   _drawOverlay(o) {

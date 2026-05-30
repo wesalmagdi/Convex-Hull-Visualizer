@@ -320,6 +320,7 @@ class App {
       hullPoints: hull,
       currentPoint: step.current || null,
       highlightPoints: step.lower || step.upper ? [...(step.lower || []), ...(step.upper || [])] : null,
+      stepDesc: step.desc || '',
     });
   }
 
