@@ -49,64 +49,65 @@ class SoundManager {
   }
 }
 
-/* ─── Preset Generators (all use radius ≈ 6–7 for consistency) ─── */
+/* ─── Preset Generators (all use n points, consistent size) ─── */
 function generateShape(shape, n) {
   n = Math.max(3, Math.min(200, n || 10));
   const R = 6.5;
   const pts = [];
+
+  // Helper: distribute pts evenly along perimeter of a regular polygon
+  const onPolygon = (sides, rot) => {
+    for (let i = 0; i < n; i++) {
+      const t = (i / n) * sides;
+      const s = Math.floor(t) % sides;
+      const f = t - Math.floor(t);
+      const a1 = (s / sides) * Math.PI * 2 + rot;
+      const a2 = ((s + 1) / sides) * Math.PI * 2 + rot;
+      pts.push([
+        (Math.cos(a1) + (Math.cos(a2) - Math.cos(a1)) * f) * R,
+        (Math.sin(a1) + (Math.sin(a2) - Math.sin(a1)) * f) * R,
+      ]);
+    }
+  };
+
   switch (shape) {
-    case 'triangle': {
-      for (let i = 0; i < 3; i++) {
-        const a = (i / 3) * Math.PI * 2 - Math.PI / 2;
-        pts.push([Math.cos(a) * R, Math.sin(a) * R]);
-      }
-      return pts;
-    }
-    case 'square': {
-      for (let i = 0; i < 4; i++) {
-        const a = (i / 4) * Math.PI * 2 + Math.PI / 4;
-        pts.push([Math.cos(a) * R, Math.sin(a) * R]);
-      }
-      return pts;
-    }
-    case 'polygon': {
+    case 'triangle': onPolygon(3, -Math.PI / 2); return pts;
+    case 'square':   onPolygon(4, Math.PI / 4); return pts;
+    case 'polygon':
       for (let i = 0; i < n; i++) {
         const a = (i / n) * Math.PI * 2 - Math.PI / 2;
         pts.push([Math.cos(a) * R, Math.sin(a) * R]);
       }
       return pts;
-    }
     case 'star': {
-      const outer = R, inner = R * 0.4;
       const total = n % 2 === 0 ? n : n + 1;
       for (let i = 0; i < total; i++) {
         const a = (i / total) * Math.PI * 2 - Math.PI / 2;
-        pts.push([Math.cos(a) * (i % 2 === 0 ? outer : inner), Math.sin(a) * (i % 2 === 0 ? outer : inner)]);
+        const r = i % 2 === 0 ? R : R * 0.38;
+        pts.push([Math.cos(a) * r, Math.sin(a) * r]);
       }
       return pts;
     }
     case 'nested': {
-      const layers = Math.max(2, Math.min(8, Math.floor(n / 5)));
-      const perLayer = Math.floor(n / layers);
+      const layers = Math.max(2, Math.min(8, Math.floor(n / 4)));
       for (let l = 0; l < layers; l++) {
-        const r = R * (0.2 + 0.8 * ((l + 1) / layers));
-        const cnt = l === layers - 1 ? n - pts.length : perLayer;
+        const r = R * (0.25 + 0.75 * (l / (layers - 1)));
+        const cnt = Math.ceil((n - pts.length) / (layers - l));
         for (let i = 0; i < cnt; i++) {
-          const a = (i / cnt) * Math.PI * 2 + l * 0.4;
+          const a = (i / cnt) * Math.PI * 2 + l * 0.6;
           pts.push([Math.cos(a) * r, Math.sin(a) * r]);
         }
       }
       return pts;
     }
-    case 'spiral': {
+    case 'spiral':
       for (let i = 0; i < n; i++) {
-        const t = i / n;
-        const a = t * Math.PI * 6;
+        const t = i / (n - 1 || 1);
+        const a = t * Math.PI * 8;
         const r = t * R;
         pts.push([Math.cos(a) * r, Math.sin(a) * r]);
       }
       return pts;
-    }
     default:
       return [];
   }
