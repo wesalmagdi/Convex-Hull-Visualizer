@@ -49,14 +49,58 @@ class SoundManager {
   }
 }
 
-/* ─── Presets ─── */
-const PRESETS = {
-  triangle: [[-4,-3],[4,-3],[0,5]],
-  square: [[-5,-5],[5,-5],[5,5],[-5,5]],
-  cross: [[-6,0],[0,-6],[6,0],[0,6],[-4,-4],[4,4],[-4,4],[4,-4]],
-  star: [[0,7],[1.5,2],[7,2],[2.5,-1],[4.5,-6],[0,-3],[-4.5,-6],[-2.5,-1],[-7,2],[-1.5,2]],
-  diamond: [[0,-6],[5,0],[0,6],[-5,0]],
-};
+/* ─── Preset Generators ─── */
+function generateShape(shape, n) {
+  n = Math.max(3, Math.min(200, n || 10));
+  const pts = [];
+  switch (shape) {
+    case 'triangle':
+      return [[-5,-4],[5,-4],[0,6]];
+    case 'square':
+      return [[-5,-5],[5,-5],[5,5],[-5,5]];
+    case 'polygon': {
+      for (let i = 0; i < n; i++) {
+        const a = (i / n) * Math.PI * 2 - Math.PI / 2;
+        pts.push([Math.cos(a) * 6, Math.sin(a) * 6]);
+      }
+      return pts;
+    }
+    case 'star': {
+      const outer = 6, inner = 2.5;
+      const points2 = n * 2;
+      for (let i = 0; i < points2; i++) {
+        const a = (i / points2) * Math.PI * 2 - Math.PI / 2;
+        const r = i % 2 === 0 ? outer : inner;
+        pts.push([Math.cos(a) * r, Math.sin(a) * r]);
+      }
+      return pts;
+    }
+    case 'nested': {
+      const layers = Math.max(2, Math.min(8, Math.floor(n / 5)));
+      const perLayer = Math.floor(n / layers);
+      for (let l = 0; l < layers; l++) {
+        const r = 2 + l * (5 / layers);
+        const count = l === layers - 1 ? n - pts.length : perLayer;
+        for (let i = 0; i < count; i++) {
+          const a = (i / count) * Math.PI * 2 + l * 0.3;
+          pts.push([Math.cos(a) * r, Math.sin(a) * r]);
+        }
+      }
+      return pts;
+    }
+    case 'spiral': {
+      for (let i = 0; i < n; i++) {
+        const t = i / n;
+        const a = t * Math.PI * 6;
+        const r = t * 7;
+        pts.push([Math.cos(a) * r, Math.sin(a) * r]);
+      }
+      return pts;
+    }
+    default:
+      return [];
+  }
+}
 
 /* ─── App ─── */
 class App {
@@ -152,7 +196,8 @@ class App {
   }
 
   loadPreset(shape) {
-    this.points = PRESETS[shape] ? PRESETS[shape].map(p => [...p]) : [];
+    const count = parseInt(document.getElementById('rand-count').value) || 10;
+    this.points = generateShape(shape, count).map(p => [+p[0].toFixed(2), +p[1].toFixed(2)]);
     this.resetState();
     this.updateUI();
   }
