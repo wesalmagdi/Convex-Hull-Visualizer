@@ -14,6 +14,7 @@
     <h1>✦ Convex Hull Visualizer</h1>
     <div id="nav-controls">
       <span id="point-count">Points: 0</span>
+      <span id="step-counter"></span>
       <span id="algo-name"></span>
     </div>
   </nav>
@@ -21,7 +22,7 @@
   <div id="menu-screen" class="screen active">
     <div class="hero">
       <h2>Convex Hull<br><span class="gradient-text">Algorithm Visualizer</span></h2>
-      <p>Watch three classic computational geometry algorithms build convex hulls in real-time.</p>
+      <p>Watch three classic computational geometry algorithms build convex hulls in real-time. Click an algorithm to start.</p>
     </div>
     <div id="menu-buttons">
       <button class="menu-btn" data-algo="graham" style="--btn-color: #ff4081">
@@ -41,6 +42,7 @@
 
   <div id="viz-screen" class="screen">
     <canvas id="canvas"></canvas>
+
     <div id="controls">
       <div class="control-group">
         <input type="text" id="point-input" placeholder="x y (e.g. 3 5)" spellcheck="false">
@@ -60,10 +62,31 @@
         <button id="btn-back" class="btn gray">← Back</button>
       </div>
     </div>
+
+    <div id="toolbar">
+      <div class="tool-group">
+        <span class="tool-label">Speed</span>
+        <input type="range" id="speed-slider" min="1" max="10" value="5">
+        <span id="speed-label">5</span>
+      </div>
+      <div class="tool-group">
+        <span class="tool-label">Presets</span>
+        <button class="preset-btn" data-shape="triangle">△ Tri</button>
+        <button class="preset-btn" data-shape="square">▢ Square</button>
+        <button class="preset-btn" data-shape="cross">✚ Cross</button>
+        <button class="preset-btn" data-shape="star">★ Star</button>
+        <button class="preset-btn" data-shape="diamond">◇ Diamond</button>
+      </div>
+      <div class="tool-group">
+        <button id="btn-export" class="btn gray" title="Save as PNG">⬇ Export</button>
+      </div>
+    </div>
+
     <div id="info-panel">
       <div id="instructions">
-        <strong>How to use:</strong> Type "x y" + Add, click the canvas, or use Random. 3+ points needed, then Start.
+        <strong>How to use:</strong> Type "x y" + Add, click canvas, or use Presets/Random. 3+ points needed, then Start.
       </div>
+      <div id="step-desc">Ready</div>
       <div id="controls-right">
         <span id="status">Ready</span>
         <button id="btn-sound" class="icon-btn" title="Toggle sound">🔊</button>

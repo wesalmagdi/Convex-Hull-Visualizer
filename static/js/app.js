@@ -1,3 +1,4 @@
+/* ─── Sound Manager ─── */
 class SoundManager {
   constructor() {
     this.sfxOn = true;
@@ -9,9 +10,7 @@ class SoundManager {
 
   _initMusic() {
     const m = new Audio('/assets/na%20na%20na.mp3');
-    m.loop = true;
-    m.volume = 0.3;
-    m.preload = 'auto';
+    m.loop = true; m.volume = 0.3; m.preload = 'auto';
     this.musicEl = m;
   }
 
@@ -24,19 +23,13 @@ class SoundManager {
     };
     const path = paths[name];
     if (!path) return;
-    try {
-      const a = new Audio(path);
-      a.volume = 0.5;
-      a.play().catch(() => {});
-    } catch {}
+    try { const a = new Audio(path); a.volume = 0.5; a.play().catch(() => {}); } catch {}
   }
 
   musicStart() {
     if (!this.musicOn || !this.musicEl) return;
     this.musicEl.currentTime = 0;
-    this.musicEl.play().then(() => {
-      this.musicPlaying = true;
-    }).catch(() => {});
+    this.musicEl.play().then(() => { this.musicPlaying = true; }).catch(() => {});
   }
 
   musicStop() {
@@ -46,24 +39,26 @@ class SoundManager {
     this.musicPlaying = false;
   }
 
-  toggleSfx() {
-    this.sfxOn = !this.sfxOn;
-    return this.sfxOn;
-  }
-
+  toggleSfx() { this.sfxOn = !this.sfxOn; return this.sfxOn; }
   toggleMusic() {
     this.musicOn = !this.musicOn;
     if (this.musicOn) {
-      this.musicEl.play().then(() => {
-        this.musicPlaying = true;
-      }).catch(() => { this.musicOn = false; });
-    } else {
-      this.musicStop();
-    }
+      this.musicEl.play().then(() => {}).catch(() => { this.musicOn = false; });
+    } else this.musicStop();
     return this.musicOn;
   }
 }
 
+/* ─── Presets ─── */
+const PRESETS = {
+  triangle: [[-4,-3],[4,-3],[0,5]],
+  square: [[-5,-5],[5,-5],[5,5],[-5,5]],
+  cross: [[-6,0],[0,-6],[6,0],[0,6],[-4,-4],[4,4],[-4,4],[4,-4]],
+  star: [[0,7],[1.5,2],[7,2],[2.5,-1],[4.5,-6],[0,-3],[-4.5,-6],[-2.5,-1],[-7,2],[-1.5,2]],
+  diamond: [[0,-6],[5,0],[0,6],[-5,0]],
+};
+
+/* ─── App ─── */
 class App {
   constructor() {
     this.canvas = document.getElementById('canvas');
@@ -86,30 +81,17 @@ class App {
         this.selectAlgorithm(btn.dataset.algo);
       });
     });
-    document.getElementById('btn-add').addEventListener('click', () => {
-      this.sound.sfx('click'); this.addPoint();
-    });
+
+    document.getElementById('btn-add').addEventListener('click', () => { this.sound.sfx('click'); this.addPoint(); });
     document.getElementById('point-input').addEventListener('keydown', e => {
       if (e.key === 'Enter') { this.sound.sfx('click'); this.addPoint(); }
     });
-    document.getElementById('btn-random').addEventListener('click', () => {
-      this.sound.sfx('click'); this.randomPoints();
-    });
-    document.getElementById('btn-remove').addEventListener('click', () => {
-      this.sound.sfx('click'); this.removeLast();
-    });
-    document.getElementById('btn-reset').addEventListener('click', () => {
-      this.sound.sfx('reset'); this.reset();
-    });
-    document.getElementById('btn-start').addEventListener('click', () => {
-      this.sound.sfx('click'); this.start();
-    });
-    document.getElementById('btn-stop').addEventListener('click', () => {
-      this.sound.sfx('click'); this.stop();
-    });
-    document.getElementById('btn-back').addEventListener('click', () => {
-      this.sound.sfx('click'); this.goBack();
-    });
+    document.getElementById('btn-random').addEventListener('click', () => { this.sound.sfx('click'); this.randomPoints(); });
+    document.getElementById('btn-remove').addEventListener('click', () => { this.sound.sfx('click'); this.removeLast(); });
+    document.getElementById('btn-reset').addEventListener('click', () => { this.sound.sfx('reset'); this.reset(); });
+    document.getElementById('btn-start').addEventListener('click', () => { this.sound.sfx('click'); this.start(); });
+    document.getElementById('btn-stop').addEventListener('click', () => { this.sound.sfx('click'); this.stop(); });
+    document.getElementById('btn-back').addEventListener('click', () => { this.sound.sfx('click'); this.goBack(); });
     document.getElementById('btn-sound').addEventListener('click', () => {
       const on = this.sound.toggleSfx();
       document.getElementById('btn-sound').classList.toggle('muted', !on);
@@ -118,6 +100,19 @@ class App {
       const on = this.sound.toggleMusic();
       document.getElementById('btn-music').classList.toggle('muted', !on);
     });
+    document.getElementById('btn-export').addEventListener('click', () => this.exportImage());
+
+    document.querySelectorAll('.preset-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        this.sound.sfx('click');
+        this.loadPreset(btn.dataset.shape);
+      });
+    });
+
+    document.getElementById('speed-slider').addEventListener('input', e => {
+      document.getElementById('speed-label').textContent = e.target.value;
+    });
+
     this.canvas.addEventListener('click', e => {
       const p = this.viz.getCanvasPoint(e, this.points);
       if (isFinite(p[0]) && isFinite(p[1])) {
@@ -135,17 +130,11 @@ class App {
 
   selectAlgorithm(algo) {
     this.algorithm = algo;
-    this.steps = [];
-    this.stepIndex = 0;
-    this.hullResult = null;
-    this.running = false;
+    this.steps = []; this.stepIndex = 0; this.hullResult = null; this.running = false;
     const names = { graham: "Graham's Scan", giftwrap: 'Gift Wrapping', andrews: "Andrew's Monotone" };
     document.getElementById('algo-name').textContent = names[algo];
     this.showScreen('viz-screen');
-    requestAnimationFrame(() => {
-      this.viz.resize();
-      this.updateUI();
-    });
+    requestAnimationFrame(() => { this.viz.resize(); this.updateUI(); });
   }
 
   addPoint() {
@@ -156,9 +145,16 @@ class App {
       if (!isNaN(x) && !isNaN(y)) {
         this.points.push([x, y]);
         input.value = '';
+        this.resetState();
         this.updateUI();
       }
     }
+  }
+
+  loadPreset(shape) {
+    this.points = PRESETS[shape] ? PRESETS[shape].map(p => [...p]) : [];
+    this.resetState();
+    this.updateUI();
   }
 
   randomPoints() {
@@ -168,30 +164,36 @@ class App {
     for (let i = 0; i < n; i++) {
       this.points.push([+(Math.random() * 18 - 9).toFixed(2), +(Math.random() * 18 - 9).toFixed(2)]);
     }
-    this.steps = [];
-    this.stepIndex = 0;
-    this.hullResult = null;
-    this.running = false;
+    this.resetState();
     this.updateUI();
   }
 
   removeLast() {
     this.points.pop();
-    this.steps = []; this.stepIndex = 0;
-    this.hullResult = null; this.running = false;
+    this.resetState();
     this.updateUI();
   }
 
   reset() {
     this.points = [];
-    this.steps = []; this.stepIndex = 0;
-    this.hullResult = null; this.running = false;
+    this.resetState();
     this.updateUI();
+  }
+
+  resetState() {
+    this.steps = []; this.stepIndex = 0; this.hullResult = null; this.running = false;
+    if (this.animId) { clearTimeout(this.animId); this.animId = null; }
+    document.getElementById('step-counter').textContent = '';
+    document.getElementById('step-desc').textContent = '';
+  }
+
+  getSpeed() {
+    return parseInt(document.getElementById('speed-slider').value);
   }
 
   start() {
     if (this.points.length < 3) {
-      this.setStatus('Need at least 3 points', '#e74c3c');
+      this.setStatus('Need 3+ points', '#e74c3c');
       return;
     }
     this.running = true;
@@ -204,9 +206,19 @@ class App {
     else result = ConvexHullAlgorithms.andrewsMonotone(this.points);
     this.steps = result.steps;
     this.hullResult = result.hull;
-    this.setStatus('Running...', '#6c63ff');
+    document.getElementById('step-counter').textContent = `0 / ${this.steps.length}`;
+    this.setStatus('Running', '#ff4081');
+    this.renderStep(this.steps[0]);
+    this.stepIndex = 1;
     this.sound.musicStart();
-    this.animate();
+    this.scheduleNext();
+  }
+
+  scheduleNext() {
+    if (!this.running) return;
+    const speed = this.getSpeed();
+    const delay = Math.max(50, 600 - (speed - 1) * 55);
+    this.animId = setTimeout(() => this.animate(), delay);
   }
 
   animate() {
@@ -214,17 +226,20 @@ class App {
       if (this.stepIndex >= this.steps.length && this.hullResult) {
         this.renderFinal();
         this.setStatus('Complete!', '#2ecc71');
+        document.getElementById('step-counter').textContent = `${this.steps.length} / ${this.steps.length}`;
+        document.getElementById('step-desc').textContent = '✓ Convex hull complete';
         this.sound.sfx('pew');
         this.sound.musicStop();
       }
       this.running = false;
       return;
     }
-    this.renderStep(this.steps[this.stepIndex]);
+    const step = this.steps[this.stepIndex];
+    this.renderStep(step);
+    document.getElementById('step-counter').textContent = `${this.stepIndex} / ${this.steps.length}`;
+    document.getElementById('step-desc').textContent = step.desc || '';
     this.stepIndex++;
-    if (this.running) {
-      this.animId = setTimeout(() => this.animate(), 350);
-    }
+    if (this.running) this.scheduleNext();
   }
 
   renderStep(step) {
@@ -258,7 +273,16 @@ class App {
     this.running = false;
     this.steps = []; this.stepIndex = 0; this.hullResult = null;
     document.getElementById('algo-name').textContent = '';
+    document.getElementById('step-counter').textContent = '';
+    document.getElementById('step-desc').textContent = '';
     this.showScreen('menu-screen');
+  }
+
+  exportImage() {
+    const link = document.createElement('a');
+    link.download = `convex-hull-${this.algorithm || 'viz'}.png`;
+    link.href = this.canvas.toDataURL('image/png');
+    link.click();
   }
 
   updateUI() {
@@ -269,7 +293,7 @@ class App {
       this.viz.clear();
     }
     if (this.points.length < 3) {
-      this.setStatus(`Need ${3 - this.points.length} more`, '#888');
+      this.setStatus(`Need ${3 - this.points.length} more`, 'rgba(180,150,160,0.5)');
     } else {
       this.setStatus('Ready', '#2ecc71');
     }
