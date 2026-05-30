@@ -41,7 +41,7 @@ class Visualizer {
 
   drawGrid(tr) {
     const ctx = this.ctx;
-    ctx.strokeStyle = 'rgba(108,99,255,0.06)';
+    ctx.strokeStyle = 'rgba(255,64,129,0.05)';
     ctx.lineWidth = 1;
     const step = this._niceStep(tr.scale);
     const [x0, y0] = this.toCanvas([0, 0], tr);
@@ -101,7 +101,7 @@ class Visualizer {
     if (this.canvas.width === 0 || this.canvas.height === 0) return;
     this.clear();
     const tr = this.getTransform(state.points);
-    this.ctx.fillStyle = '#15152a';
+    this.ctx.fillStyle = '#0a0a0a';
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     this.drawGrid(tr);
     for (const p of state.points) this.drawPoint(p, tr);
