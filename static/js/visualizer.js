@@ -129,6 +129,56 @@ class Visualizer {
     if (state.highlightPoints) {
       for (const p of state.highlightPoints) this.drawPoint(p, tr, '#FF9800', 8);
     }
+
+    if (state.overlay) this._drawOverlay(state.overlay);
+  }
+
+  _drawOverlay(o) {
+    const ctx = this.ctx;
+    const w = this.canvas.width, h = this.canvas.height;
+
+    // dim background
+    ctx.fillStyle = 'rgba(0,0,0,0.55)';
+    ctx.fillRect(0, 0, w, h);
+
+    // decorative border glow
+    const pad = 60;
+    ctx.shadowColor = 'rgba(255,64,129,0.15)';
+    ctx.shadowBlur = 40;
+    ctx.strokeStyle = 'rgba(255,64,129,0.25)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(pad, pad, w - pad * 2, h - pad * 2);
+    ctx.shadowBlur = 0;
+
+    // checkmark + main message
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const cx = w / 2, cy = h / 2 - 20;
+
+    ctx.shadowColor = 'rgba(46,204,113,0.6)';
+    ctx.shadowBlur = 30;
+    ctx.font = 'bold 52px Inter, system-ui, sans-serif';
+    ctx.fillStyle = '#2ecc71';
+    ctx.fillText('✓', cx, cy - 44);
+    ctx.shadowBlur = 0;
+
+    ctx.shadowColor = 'rgba(255,64,129,0.5)';
+    ctx.shadowBlur = 24;
+    ctx.font = 'bold 36px Inter, system-ui, sans-serif';
+    ctx.fillStyle = '#fff';
+    ctx.fillText('Convex Hull Complete', cx, cy + 16);
+    ctx.shadowBlur = 0;
+
+    // stats line
+    ctx.font = '15px Inter, system-ui, sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    const stats = [`${o.points} points`, `${o.hullPoints} hull vertices`, o.algo].filter(Boolean).join('  ·  ');
+    ctx.fillText(stats, cx, cy + 66);
+
+    // subtle prompt
+    ctx.font = '12px Inter, system-ui, sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,0.2)';
+    ctx.fillText('press Stop to explore · Export to save', cx, cy + 106);
   }
 
   getCanvasPoint(e, points) {

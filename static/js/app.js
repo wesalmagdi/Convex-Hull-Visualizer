@@ -2,7 +2,7 @@
 class SoundManager {
   constructor() {
     this.sfxOn = true;
-    this.musicOn = false;
+    this.musicOn = true;
     this.musicPlaying = false;
     this.musicEl = null;
     this._initMusic();
@@ -126,7 +126,15 @@ class App {
     this.animId = null;
     this.running = false;
     this.hullResult = null;
+    this._showOverlay = false;
+    this._algoNames = { graham: "Graham's Scan", giftwrap: 'Gift Wrapping', andrews: "Andrew's Monotone" };
     this.bindUI();
+    this._initSoundUI();
+  }
+
+  _initSoundUI() {
+    document.getElementById('btn-sound').classList.toggle('muted', !this.sound.sfxOn);
+    document.getElementById('btn-music').classList.toggle('muted', !this.sound.musicOn);
   }
 
   bindUI() {
@@ -150,10 +158,12 @@ class App {
     document.getElementById('btn-sound').addEventListener('click', () => {
       const on = this.sound.toggleSfx();
       document.getElementById('btn-sound').classList.toggle('muted', !on);
+      this._clearOverlay();
     });
     document.getElementById('btn-music').addEventListener('click', () => {
       const on = this.sound.toggleMusic();
       document.getElementById('btn-music').classList.toggle('muted', !on);
+      this._clearOverlay();
     });
     document.getElementById('btn-export').addEventListener('click', () => this.exportImage());
 
@@ -185,9 +195,8 @@ class App {
 
   selectAlgorithm(algo) {
     this.algorithm = algo;
-    this.steps = []; this.stepIndex = 0; this.hullResult = null; this.running = false;
-    const names = { graham: "Graham's Scan", giftwrap: 'Gift Wrapping', andrews: "Andrew's Monotone" };
-    document.getElementById('algo-name').textContent = names[algo];
+    this.steps = []; this.stepIndex = 0; this.hullResult = null; this.running = false; this._showOverlay = false;
+    document.getElementById('algo-name').textContent = this._algoNames[algo];
     this.showScreen('viz-screen');
     requestAnimationFrame(() => { this.viz.resize(); this.updateUI(); });
   }
@@ -237,10 +246,15 @@ class App {
   }
 
   resetState() {
-    this.steps = []; this.stepIndex = 0; this.hullResult = null; this.running = false;
+    this.steps = []; this.stepIndex = 0; this.hullResult = null; this.running = false; this._showOverlay = false;
     if (this.animId) { clearTimeout(this.animId); this.animId = null; }
     document.getElementById('step-counter').textContent = '';
     document.getElementById('step-desc').textContent = '';
+  }
+
+  _clearOverlay() {
+    this._showOverlay = false;
+    this.updateUI();
   }
 
   getSpeed() {
@@ -280,6 +294,7 @@ class App {
   animate() {
     if (!this.running || this.stepIndex >= this.steps.length) {
       if (this.stepIndex >= this.steps.length && this.hullResult) {
+        this._showOverlay = true;
         this.renderFinal();
         this.setStatus('Complete!', '#2ecc71');
         document.getElementById('step-counter').textContent = `${this.steps.length} / ${this.steps.length}`;
@@ -314,13 +329,20 @@ class App {
       hullPoints: this.hullResult || [],
       currentPoint: null,
       highlightPoints: null,
+      overlay: this._showOverlay ? {
+        algo: this._algoNames[this.algorithm] || '',
+        points: this.points.length,
+        hullPoints: this.hullResult ? this.hullResult.length : 0,
+      } : null,
     });
   }
 
   stop() {
     this.running = false;
     if (this.animId) { clearTimeout(this.animId); this.animId = null; }
+    this._showOverlay = false;
     this.sound.musicStop();
+    this.renderFinal();
     this.setStatus('Stopped', '#f39c12');
   }
 
