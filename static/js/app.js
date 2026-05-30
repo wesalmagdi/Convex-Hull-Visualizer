@@ -1,49 +1,56 @@
 class SoundManager {
   constructor() {
-    this.enabled = true;
-    this.musicEnabled = false;
+    this.sfxOn = true;
+    this.musicOn = false;
     this.sounds = {};
     this.music = null;
-    const files = {
-      click: '/assets/bonk%20doge.mp3',
-      reset: '/assets/spongebob-fail.mp3',
-      pew: '/assets/pew.mp3',
-      music: '/assets/background_music.mp3',
-    };
-    const on = (name) => {
-      const a = new Audio(files[name]);
-      a.load();
-      return a;
-    };
-    this.sounds.click = on('click');
-    this.sounds.reset = on('reset');
-    this.sounds.pew = on('pew');
-    this.music = on('music');
-    this.music.loop = true;
+    this._load('click', '/assets/bonk%20doge.mp3');
+    this._load('reset', '/assets/spongebob-fail.mp3');
+    this._load('pew', '/assets/pew.mp3');
+    const m = new Audio('/assets/background_music.mp3');
+    m.loop = true;
+    m.volume = 0.4;
+    this.music = m;
+  }
+
+  _load(name, path) {
+    const a = new Audio(path);
+    a.volume = 0.6;
+    this.sounds[name] = a;
   }
 
   play(name) {
-    if (!this.enabled) return;
+    if (!this.sfxOn) return;
     const s = this.sounds[name];
     if (!s) return;
     s.currentTime = 0;
     s.play().catch(() => {});
   }
 
-  toggleSound() {
-    this.enabled = !this.enabled;
-    return this.enabled;
+  musicPlay() {
+    if (!this.musicOn) return;
+    this.music.currentTime = 0;
+    this.music.play().catch(() => {});
+  }
+
+  musicStop() {
+    this.music.pause();
+    this.music.currentTime = 0;
+  }
+
+  toggleSfx() {
+    this.sfxOn = !this.sfxOn;
+    return this.sfxOn;
   }
 
   toggleMusic() {
-    this.musicEnabled = !this.musicEnabled;
-    if (this.musicEnabled) {
-      this.music.play().catch(() => { this.musicEnabled = false; });
+    this.musicOn = !this.musicOn;
+    if (this.musicOn) {
+      this.music.play().catch(() => { this.musicOn = false; });
     } else {
-      this.music.pause();
-      this.music.currentTime = 0;
+      this.musicStop();
     }
-    return this.musicEnabled;
+    return this.musicOn;
   }
 }
 
@@ -69,18 +76,32 @@ class App {
         this.selectAlgorithm(btn.dataset.algo);
       });
     });
-    document.getElementById('btn-add').addEventListener('click', () => { this.sound.play('click'); this.addPoint(); });
+    document.getElementById('btn-add').addEventListener('click', () => {
+      this.sound.play('click'); this.addPoint();
+    });
     document.getElementById('point-input').addEventListener('keydown', e => {
       if (e.key === 'Enter') { this.sound.play('click'); this.addPoint(); }
     });
-    document.getElementById('btn-random').addEventListener('click', () => { this.sound.play('click'); this.randomPoints(); });
-    document.getElementById('btn-remove').addEventListener('click', () => { this.sound.play('click'); this.removeLast(); });
-    document.getElementById('btn-reset').addEventListener('click', () => { this.sound.play('reset'); this.reset(); });
-    document.getElementById('btn-start').addEventListener('click', () => { this.sound.play('click'); this.start(); });
-    document.getElementById('btn-stop').addEventListener('click', () => { this.sound.play('click'); this.stop(); });
-    document.getElementById('btn-back').addEventListener('click', () => { this.sound.play('click'); this.goBack(); });
+    document.getElementById('btn-random').addEventListener('click', () => {
+      this.sound.play('click'); this.randomPoints();
+    });
+    document.getElementById('btn-remove').addEventListener('click', () => {
+      this.sound.play('click'); this.removeLast();
+    });
+    document.getElementById('btn-reset').addEventListener('click', () => {
+      this.sound.play('reset'); this.reset();
+    });
+    document.getElementById('btn-start').addEventListener('click', () => {
+      this.sound.play('click'); this.start();
+    });
+    document.getElementById('btn-stop').addEventListener('click', () => {
+      this.sound.play('click'); this.stop();
+    });
+    document.getElementById('btn-back').addEventListener('click', () => {
+      this.sound.play('click'); this.goBack();
+    });
     document.getElementById('btn-sound').addEventListener('click', () => {
-      const on = this.sound.toggleSound();
+      const on = this.sound.toggleSfx();
       document.getElementById('btn-sound').classList.toggle('muted', !on);
     });
     document.getElementById('btn-music').addEventListener('click', () => {
@@ -178,8 +199,7 @@ class App {
     this.steps = result.steps;
     this.hullResult = result.hull;
     this.setStatus('Running...', '#4CAF50');
-    this.sound.musicEnabled = false;
-    this.sound.toggleMusic();
+    this.sound.musicPlay();
     this.animate();
   }
 
@@ -189,6 +209,7 @@ class App {
         this.renderFinal();
         this.setStatus('Complete!', '#4CAF50');
         this.sound.play('pew');
+        this.sound.musicStop();
       }
       this.running = false;
       return;
@@ -218,8 +239,7 @@ class App {
   stop() {
     this.running = false;
     if (this.animId) { clearTimeout(this.animId); this.animId = null; }
-    this.sound.musicEnabled = true;
-    this.sound.toggleMusic();
+    this.sound.musicStop();
     this.setStatus('Stopped', '#FF9800');
   }
 
@@ -243,7 +263,7 @@ class App {
     if (this.points.length < 3) {
       this.setStatus(`Need ${3 - this.points.length} more point${this.points.length === 2 ? '' : 's'}`, '#888');
     } else {
-      this.setStatus('Ready — click Start', '#4CAF50');
+      this.setStatus('Ready — press Start', '#4CAF50');
     }
   }
 

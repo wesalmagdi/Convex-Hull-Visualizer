@@ -39,6 +39,34 @@ class Visualizer {
     return { ox, oy, scale };
   }
 
+  drawGrid(tr) {
+    const ctx = this.ctx;
+    ctx.strokeStyle = 'rgba(108,99,255,0.06)';
+    ctx.lineWidth = 1;
+    const step = this._niceStep(tr.scale);
+    const [x0, y0] = this.toCanvas([0, 0], tr);
+    const nw = Math.ceil(this.canvas.width / (step * tr.scale)) + 1;
+    const nh = Math.ceil(this.canvas.height / (step * tr.scale)) + 1;
+    for (let i = -nw; i <= nw; i++) {
+      const px = x0 + i * step * tr.scale;
+      ctx.beginPath(); ctx.moveTo(px, 0); ctx.lineTo(px, this.canvas.height); ctx.stroke();
+    }
+    for (let i = -nh; i <= nh; i++) {
+      const py = y0 - i * step * tr.scale;
+      ctx.beginPath(); ctx.moveTo(0, py); ctx.lineTo(this.canvas.width, py); ctx.stroke();
+    }
+  }
+
+  _niceStep(scale) {
+    const raw = 60 / scale;
+    const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+    const norm = raw / mag;
+    if (norm < 1.5) return mag;
+    if (norm < 3.5) return 2 * mag;
+    if (norm < 7.5) return 5 * mag;
+    return 10 * mag;
+  }
+
   toCanvas(p, tr) { return [(p[0] * tr.scale + tr.ox), (tr.oy - p[1] * tr.scale)]; }
 
   drawPoint(p, tr, color = '#2196F3', radius = 6) {
@@ -73,8 +101,9 @@ class Visualizer {
     if (this.canvas.width === 0 || this.canvas.height === 0) return;
     this.clear();
     const tr = this.getTransform(state.points);
-    this.ctx.fillStyle = '#2D2D2D';
+    this.ctx.fillStyle = '#15152a';
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    this.drawGrid(tr);
     for (const p of state.points) this.drawPoint(p, tr);
 
     if (state.hullPoints && state.hullPoints.length > 0) {
